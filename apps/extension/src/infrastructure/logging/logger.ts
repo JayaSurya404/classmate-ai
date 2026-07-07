@@ -1,0 +1,2 @@
+export interface SafeExtensionLog { level: "info" | "warn" | "error"; event: string; operationId?: string; errorCode?: string; durationMs?: number; }
+export function writeSafeLog(log: SafeExtensionLog): void { const record = { timestamp: new Date().toISOString(), context: "extension", ...log }; if (log.level === "error") console.error(record); else if (log.level === "warn") console.warn(record); else console.info(record); }

@@ -1,0 +1,10 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "../app/App";
+import { ThemeProvider } from "@classmate/ui";
+import { settingsRepository } from "../adapters/chrome/storage";
+import "../styles/globals.css";
+const root = document.getElementById("root"); if (!root) throw new Error("Missing application root");
+const settings = await settingsRepository.get();
+createRoot(root).render(<StrictMode><ThemeProvider initialTheme={settings.theme} onChange={(theme) => void settingsRepository.save({ ...settings, theme })}><QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: 2, staleTime: 30_000 } } })}><App /></QueryClientProvider></ThemeProvider></StrictMode>);

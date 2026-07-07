@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "ClassMate AI — Study Copilot",
+  "version": "1.0.0",
+  "description": "Privacy-first study tools beside the page you are reading.",
+  "permissions": ["activeTab", "sidePanel", "storage", "contextMenus", "scripting", "alarms"],
+  "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": { "service_worker": "assets/service-worker.js", "type": "module" },
+  "side_panel": { "default_path": "side-panel.html" },
+  "action": { "default_title": "Open ClassMate AI" },
+  "commands": { "_execute_action": { "suggested_key": { "default": "Alt+Shift+C" } }, "capture-selection": { "suggested_key": { "default": "Alt+Shift+S" }, "description": "Capture selected text" } },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" },
+  "incognito": "not_allowed"
+}

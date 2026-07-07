@@ -1,0 +1,6 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "jsx": "react-jsx", "types": ["chrome", "vite/client"], "noEmit": true, "composite": true, "baseUrl": ".", "paths": { "@/*": ["src/*"] } },
+  "include": ["src", "vite.config.ts"],
+  "references": [{ "path": "../../packages/ai-core" }, { "path": "../../packages/content-core" }, { "path": "../../packages/contracts" }, { "path": "../../packages/domain" }, { "path": "../../packages/prompt-library" }, { "path": "../../packages/ui" }]
+}

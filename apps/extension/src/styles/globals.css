@@ -1,0 +1,15 @@
+@import "tailwindcss";
+@theme inline {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
+  --color-background: var(--background); --color-foreground: var(--foreground); --color-surface-1: var(--surface-1); --color-surface-2: var(--surface-2);
+  --color-primary: var(--primary); --color-primary-foreground: var(--primary-foreground); --color-accent: var(--accent); --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border); --color-ring: var(--ring); --color-danger: var(--danger); --color-warning: var(--warning); --color-success: var(--success);
+}
+:root { color-scheme: dark; --background:#090b12; --foreground:#f5f6fb; --surface-1:#131722; --surface-2:#1b2130; --primary:#8174ff; --primary-foreground:#fff; --accent:#252d40; --muted-foreground:#aeb6c8; --border:#30384b; --ring:#a69cff; --danger:#e4586e; --warning:#e9aa4b; --success:#4ecb9a; }
+:root.light { color-scheme: light; --background:#f8f7f4; --foreground:#171923; --surface-1:#fff; --surface-2:#f0eef7; --primary:#5b4bd8; --primary-foreground:#fff; --accent:#e8e5f7; --muted-foreground:#5f6472; --border:#d9d6e3; --ring:#5b4bd8; --danger:#b4233b; --warning:#855400; --success:#147a55; }
+* { box-sizing:border-box; border-color:var(--border); } html,body,#root { min-height:100%; } body { margin:0; background:radial-gradient(circle at 80% -20%,color-mix(in srgb,var(--primary) 18%,transparent),transparent 45%),var(--background); color:var(--foreground); font-family:var(--font-sans); }
+button,input,textarea,select { font:inherit; } ::selection { background:color-mix(in srgb,var(--primary) 38%,transparent); } :focus-visible { outline:none; }
+.control { min-height:2.5rem; width:100%; border:1px solid var(--border); border-radius:.5rem; background:var(--surface-2); padding:.5rem .75rem; color:var(--foreground); outline:none; }
+.control:focus-visible { box-shadow:0 0 0 2px var(--ring); }
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }

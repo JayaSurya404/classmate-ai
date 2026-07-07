@@ -1,0 +1,4 @@
+import type { ProviderId, SourceSnapshot, StudyAction } from "@classmate/contracts";
+import { create } from "zustand";
+interface UiState { view: "study" | "settings"; action: StudyAction; providerId: ProviderId; source: SourceSnapshot | undefined; draft: string; setView(view: UiState["view"]): void; setAction(action: StudyAction): void; setProvider(id: ProviderId): void; setSource(source: SourceSnapshot | undefined): void; setDraft(draft: string): void; }
+export const useUiStore = create<UiState>((set) => ({ view: "study", action: "summary", providerId: "gemini", source: undefined, draft: "", setView: (view) => set({ view }), setAction: (action) => set({ action }), setProvider: (providerId) => set({ providerId }), setSource: (source) => set({ source }), setDraft: (draft) => set({ draft }) }));

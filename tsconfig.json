@@ -1,0 +1,14 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/config" },
+    { "path": "packages/contracts" },
+    { "path": "packages/domain" },
+    { "path": "packages/content-core" },
+    { "path": "packages/prompt-library" },
+    { "path": "packages/ai-core" },
+    { "path": "packages/ui" },
+    { "path": "packages/test-kit" },
+    { "path": "apps/extension" }
+  ]
+}

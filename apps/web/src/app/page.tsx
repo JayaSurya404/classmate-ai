@@ -1,0 +1,1 @@
+export default function HomePage() { return <main><h1>ClassMate AI services</h1><p>The extension remains local-first. This service provides optional account, synchronization, and privacy operations.</p><p><a href="/api/v1/health">Service health</a></p></main>; }

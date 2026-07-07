@@ -1,0 +1,9 @@
+import { GeminiProvider, OpenAiCompatibleProvider, type AiProvider, type ProviderCredential, type ProviderModel } from "@classmate/ai-core";
+import type { ProviderId } from "@classmate/contracts";
+export const models: Readonly<Record<ProviderId, ProviderModel>> = {
+  gemini: { id: "gemini-2.5-flash", displayName: "Gemini Flash", providerId: "gemini", isFree: true, contextTokens: 1_000_000, capabilities: { textGeneration: true, streaming: true, structuredOutput: true, largeContext: true, local: false } },
+  groq: { id: "llama-3.3-70b-versatile", displayName: "Llama 3.3 70B", providerId: "groq", isFree: true, contextTokens: 128_000, capabilities: { textGeneration: true, streaming: true, structuredOutput: true, largeContext: true, local: false } },
+  openrouter: { id: "openrouter/free", displayName: "OpenRouter Free", providerId: "openrouter", isFree: true, contextTokens: 128_000, capabilities: { textGeneration: true, streaming: true, structuredOutput: false, largeContext: true, local: false } },
+  ollama: { id: "llama3.2", displayName: "Ollama Llama 3.2", providerId: "ollama", isFree: true, contextTokens: 32_000, capabilities: { textGeneration: true, streaming: true, structuredOutput: false, largeContext: false, local: true } }
+};
+export function createProvider(id: ProviderId, credential: ProviderCredential): AiProvider { if (id === "gemini") return new GeminiProvider(credential, models.gemini); const baseUrl = credential.baseUrl ?? (id === "ollama" ? "http://localhost:11434/v1" : undefined); const normalized = { ...(credential.apiKey ? { apiKey: credential.apiKey } : {}), ...(baseUrl ? { baseUrl } : {}) }; return new OpenAiCompatibleProvider({ id, credential: normalized, model: models[id], ...(id === "openrouter" ? { headers: { "HTTP-Referer": "https://classmate.ai", "X-Title": "ClassMate AI" } } : {}) }); }
