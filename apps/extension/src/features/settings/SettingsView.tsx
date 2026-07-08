@@ -5,13 +5,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { credentialVault, settingsRepository } from "../../adapters/chrome/storage";
-import { useUiStore } from "../../stores/ui-store";
+import { useProviderStore } from "../../stores/provider-store";
 
 const FormSchema = SettingsSchema.extend({ apiKey: z.string().max(1000), ollamaBaseUrl: z.string().url() });
 type FormValues = z.infer<typeof FormSchema>;
 const providers = ProviderIdSchema.options;
 export function SettingsView() {
-  const [isLoading, setIsLoading] = useState(true); const [feedback, setFeedback] = useState<string>(); const setProvider = useUiStore((state) => state.setProvider); const { setTheme } = useTheme();
+  const [isLoading, setIsLoading] = useState(true); const [feedback, setFeedback] = useState<string>(); const setProvider = useProviderStore((state) => state.setProviderId); const { setTheme } = useTheme();
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver: zodResolver(FormSchema), defaultValues: { schemaVersion: 1, theme: "dark", locale: "en", defaultProvider: "gemini", explanationDepth: "standard", telemetryConsent: false, apiKey: "", ollamaBaseUrl: "http://localhost:11434/v1" } });
   const selectedProvider = watch("defaultProvider");
   useEffect(() => { void Promise.all([settingsRepository.get(), credentialVault.get(selectedProvider)]).then(([settings, credential]) => { reset({ ...settings, apiKey: credential?.apiKey ?? "", ollamaBaseUrl: credential?.baseUrl ?? "http://localhost:11434/v1" }); setIsLoading(false); }); }, [reset, selectedProvider]);

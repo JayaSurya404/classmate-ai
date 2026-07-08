@@ -1,4 +1,24 @@
-import type { ProviderId, SourceSnapshot, StudyAction } from "@classmate/contracts";
 import { create } from "zustand";
-interface UiState { view: "study" | "settings"; action: StudyAction; providerId: ProviderId; source: SourceSnapshot | undefined; draft: string; setView(view: UiState["view"]): void; setAction(action: StudyAction): void; setProvider(id: ProviderId): void; setSource(source: SourceSnapshot | undefined): void; setDraft(draft: string): void; }
-export const useUiStore = create<UiState>((set) => ({ view: "study", action: "summary", providerId: "gemini", source: undefined, draft: "", setView: (view) => set({ view }), setAction: (action) => set({ action }), setProvider: (providerId) => set({ providerId }), setSource: (source) => set({ source }), setDraft: (draft) => set({ draft }) }));
+import type { WorkspacePanel } from "../features/workspace/types";
+
+interface UiState {
+  panel: WorkspacePanel;
+  sidebarCollapsed: boolean;
+  setPanel(panel: WorkspacePanel): void;
+  setSidebarCollapsed(collapsed: boolean): void;
+  toggleSidebar(): void;
+}
+
+export const useUiStore = create<UiState>((set) => ({
+  panel: "study",
+  sidebarCollapsed: false,
+  setPanel: (panel) => {
+    set({ panel });
+  },
+  setSidebarCollapsed: (sidebarCollapsed) => {
+    set({ sidebarCollapsed });
+  },
+  toggleSidebar: () => {
+    set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed }));
+  },
+}));

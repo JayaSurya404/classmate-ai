@@ -1,5 +1,28 @@
 import type { GenerationRequest, ProviderId, StreamEvent } from "@classmate/contracts";
 import { assemblePrompt } from "@classmate/prompt-library";
+export {
+  compressSource,
+  createCacheKey,
+  createIntelligencePlan,
+  createMetric,
+  estimateGeneration,
+  MemoryResponseCache,
+  routePrompt,
+  routeProviders,
+  scoreConfidence,
+  type AiMetric,
+  type CachedAiResponse,
+  type CompressionResult,
+  type ConfidenceScore,
+  type ContentKind,
+  type IntelligenceInput,
+  type IntelligencePlan,
+  type MetricInput,
+  type PromptRoute,
+  type ProviderHealth,
+  type SessionTurn,
+  type TokenForecast,
+} from "./intelligence";
 
 export interface ProviderCapabilities { textGeneration: true; streaming: boolean; structuredOutput: boolean; largeContext: boolean; local: boolean; }
 export interface ProviderModel { id: string; displayName: string; providerId: ProviderId; isFree: boolean; contextTokens: number; capabilities: ProviderCapabilities; }

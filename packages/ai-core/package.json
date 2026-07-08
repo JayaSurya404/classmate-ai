@@ -2,5 +2,6 @@
   "name": "@classmate/ai-core", "version": "1.0.0", "type": "module", "private": true,
   "exports": { ".": "./src/index.ts" },
   "scripts": { "build": "tsc -p tsconfig.json", "typecheck": "tsc -p tsconfig.json --noEmit", "test": "vitest run", "lint": "eslint src", "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"" },
-  "dependencies": { "@classmate/contracts": "workspace:*", "@classmate/prompt-library": "workspace:*" }
+  "dependencies": { "@classmate/content-core": "workspace:*", "@classmate/contracts": "workspace:*", "@classmate/prompt-library": "workspace:*" },
+  "devDependencies": { "@classmate/test-kit": "workspace:*" }
 }

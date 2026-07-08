@@ -7,21 +7,200 @@ import { captureActiveTab } from "../../adapters/chrome/capture";
 import { createProvider } from "../../adapters/ai/providers";
 import { credentialVault } from "../../adapters/chrome/storage";
 import { localRepositories } from "../../adapters/local-db/database";
-import { useUiStore } from "../../stores/ui-store";
-const actions: readonly { id: StudyAction; label: string; description: string }[] = [{ id: "summary", label: "Summarize", description: "Condense the important ideas" }, { id: "explain_simple", label: "Explain simply", description: "Plain language and an analogy" }, { id: "flashcards", label: "Flashcards", description: "Make active-recall cards" }, { id: "quiz", label: "Quiz", description: "Test understanding" }, { id: "exam_answer", label: "Exam answer", description: "2, 5, 10, or 16 marks" }, { id: "chat", label: "Ask", description: "Grounded answer from this page" }];
-export function StudyView() {
-  const { source, setSource, action, setAction, providerId, draft, setDraft } = useUiStore(); const [output, setOutput] = useState(""); const [status, setStatus] = useState<"idle" | "capturing" | "streaming" | "failed" | "complete">("idle"); const [message, setMessage] = useState<string>(); const abortRef = useRef<AbortController>(null);
-  useEffect(() => { void chrome.storage.local.get("draft").then((value) => { if (typeof value.draft === "string" && !draft) setDraft(value.draft); }); }, [draft, setDraft]);
-  const capture = async (): Promise<void> => { setStatus("capturing"); setMessage(undefined); const result = await captureActiveTab(); if (result.ok) { setSource(result.source); await localRepositories.sources.save(result.source); setStatus("idle"); } else { setStatus("failed"); setMessage(result.message); } };
-  const generate = async (): Promise<void> => {
-    if (!source) { await capture(); return; } setStatus("streaming"); setMessage(undefined); setOutput(""); const controller = new AbortController(); abortRef.current = controller;
-    const storedCredential = await credentialVault.get(providerId); const credential = { ...(storedCredential?.apiKey ? { apiKey: storedCredential.apiKey } : {}), ...(storedCredential?.baseUrl ? { baseUrl: storedCredential.baseUrl } : {}) };
-    const request: GenerationRequest = { schemaVersion: 1, operationId: crypto.randomUUID(), action, prompt: draft || defaultPrompt(action), source, providerId, settings: { depth: "standard", locale: navigator.language, allowPaid: false, ...(action === "exam_answer" ? { marks: 10 as const } : {}) } };
-    await localRepositories.operations.saveIntent(request); await chrome.storage.local.set({ draft }); const routes = new ProviderRouter([createProvider(providerId, credential)]).routes(request); const provider = routes[0]; if (!provider) { setStatus("failed"); setMessage("No eligible free route is configured. Choose a provider in Settings."); return; }
-    const configuration = await provider.validateConfiguration(); if (!configuration.ok) { setStatus("failed"); setMessage(`${configuration.message} Open Settings to finish provider setup.`); return; }
-    let text = ""; try { for await (const event of provider.stream(request, controller.signal)) { if (event.type === "delta") { text += event.text; setOutput(text); } if (event.type === "error") throw new Error(event.message); } const artifact: Artifact = ArtifactSchema.parse({ schemaVersion: 1, id: crypto.randomUUID(), type: action, title: `${labelFor(action)} · ${source.title}`, markdown: text, citations: [], sourceIds: [source.id], createdAt: new Date().toISOString(), provenance: { provider: provider.id, model: provider.models()[0]?.id ?? "unknown", templateId: action, templateVersion: "1.0.0", isAiGenerated: true } }); await localRepositories.artifacts.save(artifact); await localRepositories.operations.update(request.operationId, { status: "completed", completedAt: new Date().toISOString(), artifactId: artifact.id }); setStatus("complete"); } catch (error) { const cancelled = controller.signal.aborted; await localRepositories.operations.update(request.operationId, cancelled ? { status: "cancelled", completedAt: new Date().toISOString() } : { status: "incomplete", updatedAt: new Date().toISOString(), partialText: text }); setStatus(cancelled ? "idle" : "failed"); setMessage(cancelled ? "Generation stopped. Your partial response is preserved." : error instanceof Error ? error.message : "Generation failed. Your draft is safe."); }
+import { useProviderStore } from "../../stores/provider-store";
+import { useWorkspaceStore } from "../../stores/workspace-store";
+
+const actions: readonly { id: StudyAction; label: string; description: string }[] = [
+  { id: "summary", label: "Summarize", description: "Condense the important ideas" },
+  { id: "explain_simple", label: "Explain simply", description: "Plain language and an analogy" },
+  { id: "flashcards", label: "Flashcards", description: "Make active-recall cards" },
+  { id: "quiz", label: "Quiz", description: "Test understanding" },
+  { id: "exam_answer", label: "Exam answer", description: "2, 5, 10, or 16 marks" },
+  { id: "chat", label: "Ask", description: "Grounded answer from this page" },
+];
+
+/** @deprecated Use the Workspace feature instead. Retained for reference during migration. */
+export function LegacyStudyView() {
+  const source = useWorkspaceStore((state) => state.source);
+  const setSource = useWorkspaceStore((state) => state.setSource);
+  const providerId = useProviderStore((state) => state.providerId);
+  const [draft, setDraft] = useState("");
+  const [action, setAction] = useState<StudyAction>("summary");
+  const [output, setOutput] = useState("");
+  const [status, setStatus] = useState<"idle" | "capturing" | "streaming" | "failed" | "complete">("idle");
+  const [message, setMessage] = useState<string>();
+  const abortRef = useRef<AbortController>(null);
+
+  useEffect(() => {
+    void chrome.storage.local.get("draft").then((value) => {
+      if (typeof value.draft === "string" && !draft) setDraft(value.draft);
+    });
+  }, [draft]);
+
+  const capture = async (): Promise<void> => {
+    setStatus("capturing");
+    setMessage(undefined);
+    const result = await captureActiveTab();
+    if (result.ok) {
+      setSource(result.source);
+      await localRepositories.sources.save(result.source);
+      setStatus("idle");
+    } else {
+      setStatus("failed");
+      setMessage(result.message);
+    }
   };
-  return <section aria-labelledby="study-heading" className="space-y-4"><div><h2 id="study-heading" className="text-xl font-bold">What are you studying?</h2><p className="mt-1 text-sm text-muted-foreground">Capture only when you choose. Inspect the source before sending it.</p></div>{source ? <Card className="flex items-center gap-3 p-3"><Paperclip className="size-4 text-primary"/><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{source.title}</p><p className="text-xs text-muted-foreground">Using {source.scope} · {source.sourceType} · ~{Math.ceil(source.blocks[0]!.text.length / 4)} tokens</p></div><Button size="icon" variant="ghost" aria-label="Remove source" onClick={() => setSource(undefined)}><X className="size-4"/></Button></Card> : <Card className="p-4"><p className="text-sm font-medium">No source attached</p><p className="mt-1 text-xs text-muted-foreground">Use the visible selection first, then the readable page.</p><Button className="mt-3" variant="secondary" onClick={() => void capture()} disabled={status === "capturing"}>{status === "capturing" ? <LoaderCircle className="size-4 animate-spin"/> : <Paperclip className="size-4"/>} Read this page</Button></Card>}<div className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">{actions.map((item) => <button type="button" key={item.id} onClick={() => setAction(item.id)} className={`min-h-18 rounded-xl border p-3 text-start outline-none transition focus-visible:ring-2 focus-visible:ring-ring ${action === item.id ? "border-primary bg-primary/10" : "bg-surface-1 hover:bg-surface-2"}`}><span className="text-sm font-semibold">{item.label}</span><span className="mt-1 block text-xs text-muted-foreground">{item.description}</span></button>)}</div><Card className="overflow-hidden"><textarea aria-label="Study request" value={draft} onChange={(event) => setDraft(event.target.value)} onBlur={() => void chrome.storage.local.set({ draft })} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void generate(); } }} placeholder={`Ask for a ${labelFor(action).toLocaleLowerCase()}…`} className="min-h-24 w-full resize-y bg-transparent p-3 text-sm outline-none placeholder:text-muted-foreground"/><div className="flex items-center justify-between border-t p-2"><span className="px-1 text-xs text-muted-foreground">{providerId} · free route</span>{status === "streaming" ? <Button variant="secondary" onClick={() => abortRef.current?.abort()}><Square className="size-4"/> Stop</Button> : <Button onClick={() => void generate()}><Send className="size-4"/> Generate</Button>}</div></Card>{message && <div role="alert" className="rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm"><p>{message}</p><Button className="mt-2" variant="secondary" onClick={() => void generate()}>Retry</Button></div>}{output && <Card className="p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs font-semibold uppercase tracking-wide text-primary">AI-generated study aid</span><Button variant="ghost" onClick={() => void navigator.clipboard.writeText(output)}>Copy</Button></div><MarkdownRenderer markdown={output}/>{status === "streaming" && <p aria-live="polite" className="mt-3 text-xs text-muted-foreground">Generating…</p>}</Card>}</section>;
+
+  const generate = async (): Promise<void> => {
+    if (!source) {
+      await capture();
+      return;
+    }
+    setStatus("streaming");
+    setMessage(undefined);
+    setOutput("");
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const storedCredential = await credentialVault.get(providerId);
+    const credential = {
+      ...(storedCredential?.apiKey ? { apiKey: storedCredential.apiKey } : {}),
+      ...(storedCredential?.baseUrl ? { baseUrl: storedCredential.baseUrl } : {}),
+    };
+    const request: GenerationRequest = {
+      schemaVersion: 1,
+      operationId: crypto.randomUUID(),
+      action,
+      prompt: draft || defaultPrompt(action),
+      source,
+      providerId,
+      settings: {
+        depth: "standard",
+        locale: navigator.language,
+        allowPaid: false,
+        ...(action === "exam_answer" ? { marks: 10 as const } : {}),
+      },
+    };
+    await localRepositories.operations.saveIntent(request);
+    await chrome.storage.local.set({ draft });
+    const routes = new ProviderRouter([createProvider(providerId, credential)]).routes(request);
+    const provider = routes[0];
+    if (!provider) {
+      setStatus("failed");
+      setMessage("No eligible free route is configured. Choose a provider in Settings.");
+      return;
+    }
+    const configuration = await provider.validateConfiguration();
+    if (!configuration.ok) {
+      setStatus("failed");
+      setMessage(`${configuration.message} Open Settings to finish provider setup.`);
+      return;
+    }
+    let text = "";
+    try {
+      for await (const event of provider.stream(request, controller.signal)) {
+        if (event.type === "delta") {
+          text += event.text;
+          setOutput(text);
+        }
+        if (event.type === "error") throw new Error(event.message);
+      }
+      const artifact: Artifact = ArtifactSchema.parse({
+        schemaVersion: 1,
+        id: crypto.randomUUID(),
+        type: action,
+        title: `${labelFor(action)} · ${source.title}`,
+        markdown: text,
+        citations: [],
+        sourceIds: [source.id],
+        createdAt: new Date().toISOString(),
+        provenance: {
+          provider: provider.id,
+          model: provider.models()[0]?.id ?? "unknown",
+          templateId: action,
+          templateVersion: "1.0.0",
+          isAiGenerated: true,
+        },
+      });
+      await localRepositories.artifacts.save(artifact);
+      await localRepositories.operations.update(request.operationId, {
+        status: "completed",
+        completedAt: new Date().toISOString(),
+        artifactId: artifact.id,
+      });
+      setStatus("complete");
+    } catch (error) {
+      const cancelled = controller.signal.aborted;
+      await localRepositories.operations.update(
+        request.operationId,
+        cancelled
+          ? { status: "cancelled", completedAt: new Date().toISOString() }
+          : { status: "incomplete", updatedAt: new Date().toISOString(), partialText: text },
+      );
+      setStatus(cancelled ? "idle" : "failed");
+      setMessage(
+        cancelled
+          ? "Generation stopped. Your partial response is preserved."
+          : error instanceof Error
+            ? error.message
+            : "Generation failed. Your draft is safe.",
+      );
+    }
+  };
+
+  return (
+    <section aria-labelledby="study-heading" className="space-y-4">
+      <div>
+        <h2 id="study-heading" className="text-xl font-bold">
+          Legacy study view
+        </h2>
+      </div>
+      {source ? (
+        <Card className="flex items-center gap-3 p-3">
+          <Paperclip className="size-4 text-primary" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{source.title}</p>
+          </div>
+          <Button size="icon" variant="ghost" aria-label="Remove source" onClick={() => setSource(undefined)}>
+            <X className="size-4" />
+          </Button>
+        </Card>
+      ) : null}
+      <Card className="overflow-hidden">
+        <textarea
+          aria-label="Study request"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          className="min-h-24 w-full resize-y bg-transparent p-3 text-sm outline-none"
+        />
+        <div className="flex items-center justify-between border-t p-2">
+          {status === "streaming" ? (
+            <Button variant="secondary" onClick={() => abortRef.current?.abort()}>
+              <Square className="size-4" /> Stop
+            </Button>
+          ) : (
+            <Button onClick={() => void generate()}>
+              <Send className="size-4" /> Generate
+            </Button>
+          )}
+        </div>
+      </Card>
+      {message && <div role="alert" className="rounded-xl border p-3 text-sm">{message}</div>}
+      {output && (
+        <Card className="p-4">
+          <MarkdownRenderer markdown={output} />
+          {status === "streaming" && <LoaderCircle className="mt-3 size-4 animate-spin" />}
+        </Card>
+      )}
+    </section>
+  );
 }
-function labelFor(action: StudyAction): string { return actions.find((item) => item.id === action)?.label ?? "Answer"; }
-function defaultPrompt(action: StudyAction): string { return action === "summary" ? "Summarize the attached source faithfully." : `Create a ${labelFor(action).toLocaleLowerCase()} from the attached source.`; }
+
+function labelFor(action: StudyAction): string {
+  return actions.find((item) => item.id === action)?.label ?? "Answer";
+}
+
+function defaultPrompt(action: StudyAction): string {
+  return action === "summary"
+    ? "Summarize the attached source faithfully."
+    : `Create a ${labelFor(action).toLocaleLowerCase()} from the attached source.`;
+}

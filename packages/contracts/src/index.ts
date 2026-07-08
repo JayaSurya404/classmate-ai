@@ -2,11 +2,13 @@ import { z } from "zod";
 
 export const IdSchema = z.string().uuid();
 export const SourceTypeSchema = z.enum(["article", "documentation", "repository", "pdf", "youtube", "lms", "generic", "pasted"]);
+export type SourceType = z.infer<typeof SourceTypeSchema>;
 export const ContentBlockSchema = z.object({
   id: z.string().min(1), type: z.enum(["heading", "paragraph", "code", "list", "table", "quote"]),
   text: z.string().max(100_000), headingPath: z.array(z.string()).max(12), startOffset: z.number().int().nonnegative(),
   endOffset: z.number().int().nonnegative(), language: z.string().max(32).optional()
 }).refine((value) => value.endOffset >= value.startOffset, "Invalid source offsets");
+export type ContentBlock = z.infer<typeof ContentBlockSchema>;
 export const SourceSnapshotSchema = z.object({
   schemaVersion: z.literal(1), id: IdSchema, title: z.string().min(1).max(500), canonicalUrl: z.string().url().optional(),
   sourceType: SourceTypeSchema, capturedAt: z.string().datetime(), contentHash: z.string().min(16),
@@ -16,8 +18,130 @@ export const SourceSnapshotSchema = z.object({
 });
 export type SourceSnapshot = z.infer<typeof SourceSnapshotSchema>;
 
-export const StudyActionSchema = z.enum(["summary", "explain_simple", "explain_deep", "flashcards", "quiz", "memory_tricks", "exam_answer", "university_answer", "lab_record", "viva", "chat"]);
+export const StudyActionSchema = z.enum(["summary", "explain_simple", "explain_deep", "rewrite", "simplify", "flashcards", "quiz", "memory_tricks", "mind_map", "study_plan", "exam_answer", "university_answer", "lab_record", "viva", "chat"]);
 export type StudyAction = z.infer<typeof StudyActionSchema>;
+
+export const FlashcardTypeSchema = z.enum(["qa", "cloze", "definition", "concept", "formula"]);
+export type FlashcardType = z.infer<typeof FlashcardTypeSchema>;
+
+export const FlashcardSchema = z.object({
+  id: z.string().uuid(),
+  type: FlashcardTypeSchema,
+  front: z.string().min(1).max(1000),
+  back: z.string().min(1).max(2000),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  tags: z.array(z.string().max(50)).max(10),
+  citations: z.array(z.string()),
+  isFavorite: z.boolean().default(false),
+  reviewCount: z.number().int().nonnegative().default(0),
+  lastReviewedAt: z.string().datetime().optional(),
+});
+export type Flashcard = z.infer<typeof FlashcardSchema>;
+
+export const FlashcardDeckSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  sourceId: z.string().uuid().optional(),
+  cards: z.array(FlashcardSchema).max(500),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type FlashcardDeck = z.infer<typeof FlashcardDeckSchema>;
+
+export const QuestionTypeSchema = z.enum(["multiple_choice", "true_false", "fill_blank", "matching", "one_word", "short_answer", "long_answer"]);
+export type QuestionType = z.infer<typeof QuestionTypeSchema>;
+
+export const QuizQuestionSchema = z.object({
+  id: z.string().uuid(),
+  type: QuestionTypeSchema,
+  prompt: z.string().min(1).max(2000),
+  choices: z.array(z.string().max(500)).max(6).optional(),
+  correctAnswer: z.union([z.string(), z.array(z.string())]),
+  explanation: z.string().max(1000).optional(),
+  difficulty: z.enum(["easy", "medium", "hard"]),
+  citations: z.array(z.string()),
+});
+export type QuizQuestion = z.infer<typeof QuizQuestionSchema>;
+
+export const QuizAttemptSchema = z.object({
+  id: z.string().uuid(),
+  quizId: z.string().uuid(),
+  answers: z.record(z.string(), z.union([z.string(), z.array(z.string())])),
+  score: z.number().min(0).max(100),
+  completedAt: z.string().datetime(),
+});
+export type QuizAttempt = z.infer<typeof QuizAttemptSchema>;
+
+export const QuizSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  sourceId: z.string().uuid().optional(),
+  questions: z.array(QuizQuestionSchema).max(100),
+  attempts: z.array(QuizAttemptSchema).max(50),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type Quiz = z.infer<typeof QuizSchema>;
+
+export const MemoryToolTypeSchema = z.enum(["mnemonic", "acronym", "analogy", "story", "feynman"]);
+export type MemoryToolType = z.infer<typeof MemoryToolTypeSchema>;
+
+export const MemoryAidSchema = z.object({
+  id: z.string().uuid(),
+  type: MemoryToolTypeSchema,
+  concept: z.string().min(1).max(500),
+  aid: z.string().min(1).max(2000),
+  explanation: z.string().max(1000).optional(),
+  citations: z.array(z.string()),
+});
+export type MemoryAid = z.infer<typeof MemoryAidSchema>;
+
+export const MindMapNodeSchema = z.object({
+  id: z.string().uuid(),
+  label: z.string().min(1).max(200),
+  parentId: z.string().uuid().nullable(),
+  children: z.array(z.string().uuid()),
+  level: z.number().int().nonnegative(),
+  isExpanded: z.boolean().default(true),
+});
+export type MindMapNode = z.infer<typeof MindMapNodeSchema>;
+
+export const MindMapSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  sourceId: z.string().uuid().optional(),
+  nodes: z.array(MindMapNodeSchema).max(200),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+export type MindMap = z.infer<typeof MindMapSchema>;
+
+export const StudyPlanTypeSchema = z.enum(["30_min", "1_hour", "tomorrow_exam", "one_week"]);
+export type StudyPlanType = z.infer<typeof StudyPlanTypeSchema>;
+
+export const StudyPlanItemSchema = z.object({
+  id: z.string().uuid(),
+  title: z.string().min(1).max(300),
+  duration: z.number().int().positive(),
+  order: z.number().int().nonnegative(),
+  topics: z.array(z.string().max(200)).max(10),
+});
+export type StudyPlanItem = z.infer<typeof StudyPlanItemSchema>;
+
+export const StudyPlanSchema = z.object({
+  schemaVersion: z.literal(1),
+  id: z.string().uuid(),
+  title: z.string().min(1).max(500),
+  planType: StudyPlanTypeSchema,
+  sourceId: z.string().uuid().optional(),
+  items: z.array(StudyPlanItemSchema).max(20),
+  totalDuration: z.number().int().positive(),
+  createdAt: z.string().datetime(),
+});
+export type StudyPlan = z.infer<typeof StudyPlanSchema>;
 export const CitationSchema = z.object({ id: z.string(), sourceId: IdSchema, chunkId: z.string(), quote: z.string().max(1000).optional(), confidence: z.enum(["high", "medium", "low"]) });
 export const ArtifactSchema = z.object({
   schemaVersion: z.literal(1), id: IdSchema, type: StudyActionSchema, title: z.string().min(1).max(500), markdown: z.string(),

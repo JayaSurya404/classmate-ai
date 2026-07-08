@@ -9,6 +9,7 @@
     { "path": "packages/ai-core" },
     { "path": "packages/ui" },
     { "path": "packages/test-kit" },
+    { "path": "packages/learning-tools" },
     { "path": "apps/extension" }
   ]
 }

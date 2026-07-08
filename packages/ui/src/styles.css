@@ -1,1 +1,274 @@
-:root { color-scheme: dark; }
+/* ClassMate AI — Design System Tokens */
+
+:root {
+  color-scheme: dark;
+
+  /* Color — premium dark */
+  --background: #07080f;
+  --foreground: #f4f5fa;
+  --surface-1: #111522;
+  --surface-2: #181e2e;
+  --surface-3: #212838;
+  --primary: #8b7cff;
+  --primary-foreground: #ffffff;
+  --accent: #252d42;
+  --accent-foreground: #e8ebf5;
+  --muted: #1a2030;
+  --muted-foreground: #a8b0c4;
+  --border: #2e364a;
+  --ring: #b4a8ff;
+  --success: #4ecb9a;
+  --success-foreground: #062818;
+  --warning: #e9aa4b;
+  --warning-foreground: #2a1800;
+  --danger: #e4586e;
+  --danger-foreground: #2a0610;
+  --info: #5b9fd4;
+  --info-foreground: #061828;
+
+  /* Glassmorphism */
+  --glass-bg: color-mix(in srgb, var(--surface-1) 72%, transparent);
+  --glass-border: color-mix(in srgb, var(--border) 65%, transparent);
+  --glass-blur: 16px;
+  --glass-fallback: var(--surface-1);
+
+  /* Typography scale */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SF Mono", monospace;
+  --text-display: 1.5rem;
+  --text-title: 1.25rem;
+  --text-section: 1rem;
+  --text-body: 0.875rem;
+  --text-reading: 0.9375rem;
+  --text-label: 0.75rem;
+  --text-caption: 0.6875rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+  --weight-regular: 400;
+  --weight-medium: 550;
+  --weight-semibold: 600;
+  --weight-bold: 650;
+
+  /* Spacing (4px base grid) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Shape */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+
+  /* Motion */
+  --duration-instant: 0ms;
+  --duration-fast: 120ms;
+  --duration-normal: 180ms;
+  --duration-slow: 240ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1.2);
+
+  /* Elevation */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #000 24%, transparent);
+  --shadow-md: 0 4px 16px color-mix(in srgb, #000 28%, transparent);
+  --shadow-lg: 0 8px 32px color-mix(in srgb, #000 32%, transparent);
+
+  /* Panel padding */
+  --panel-px: 0.75rem;
+}
+
+:root.light {
+  color-scheme: light;
+  --background: #f8f7f4;
+  --foreground: #171923;
+  --surface-1: #ffffff;
+  --surface-2: #f0eef7;
+  --surface-3: #e8e5f2;
+  --primary: #5b4bd8;
+  --primary-foreground: #ffffff;
+  --accent: #e8e5f7;
+  --accent-foreground: #2a2550;
+  --muted: #eceaf3;
+  --muted-foreground: #5f6472;
+  --border: #d9d6e3;
+  --ring: #5b4bd8;
+  --success: #147a55;
+  --success-foreground: #ffffff;
+  --warning: #855400;
+  --warning-foreground: #ffffff;
+  --danger: #b4233b;
+  --danger-foreground: #ffffff;
+  --info: #1a5f8a;
+  --info-foreground: #ffffff;
+  --glass-bg: color-mix(in srgb, var(--surface-1) 88%, transparent);
+  --glass-border: color-mix(in srgb, var(--border) 80%, transparent);
+  --glass-fallback: var(--surface-1);
+}
+
+@media (min-width: 400px) {
+  :root {
+    --panel-px: 1rem;
+  }
+}
+
+@media (min-width: 560px) {
+  :root {
+    --panel-px: 1.25rem;
+  }
+}
+
+/* Base resets for UI package consumers */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 38%, transparent);
+}
+
+:focus-visible {
+  outline: none;
+}
+
+/* Glass panel utility */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-panel {
+    background: var(--glass-fallback);
+  }
+}
+
+/* Typography utilities */
+.text-display {
+  font-size: var(--text-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.text-title {
+  font-size: var(--text-title);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+}
+
+.text-section {
+  font-size: var(--text-section);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-normal);
+}
+
+.text-body {
+  font-size: var(--text-body);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+}
+
+.text-reading {
+  font-size: var(--text-reading);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+}
+
+.text-label {
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-normal);
+}
+
+.text-caption {
+  font-size: var(--text-caption);
+  font-weight: 450;
+  line-height: var(--leading-normal);
+}
+
+/* Markdown prose */
+.ui-prose {
+  max-width: 65ch;
+  color: var(--foreground);
+  font-size: var(--text-reading);
+  line-height: var(--leading-relaxed);
+}
+
+.ui-prose h1,
+.ui-prose h2,
+.ui-prose h3 {
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  margin-block: 1.25em 0.5em;
+}
+
+.ui-prose h1 {
+  font-size: var(--text-title);
+}
+
+.ui-prose h2 {
+  font-size: var(--text-section);
+}
+
+.ui-prose h3 {
+  font-size: var(--text-body);
+}
+
+.ui-prose p {
+  margin-block: 0.75em;
+}
+
+.ui-prose a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.ui-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--surface-2);
+  padding: 0.125em 0.375em;
+  border-radius: var(--radius-sm);
+}
+
+.ui-prose pre {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  padding: var(--space-4);
+}
+
+.ui-prose ul,
+.ui-prose ol {
+  padding-inline-start: 1.25em;
+  margin-block: 0.75em;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}
