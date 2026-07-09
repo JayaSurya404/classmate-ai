@@ -1,12 +1,13 @@
 import { motion } from "framer-motion";
-import { useEffect, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { useToast } from "@classmate/ui";
 import { useMessagesStore } from "../../../stores/messages-store";
 import { useSessionsStore } from "../../../stores/sessions-store";
 import { useUiStore } from "../../../stores/ui-store";
 import { useWorkspaceStore } from "../../../stores/workspace-store";
-import { SettingsView } from "../../settings/SettingsView";
-import { PracticeView } from "../../practice";
+import type { ExamPanelMode } from "../../exam/ExamPrepView";
+import type { NotebookPanelMode } from "../../notebook/NotebookView";
+import type { SyncPanelMode } from "../../sync/SyncCenterView";
 import { useAutoScroll } from "../hooks/useAutoScroll";
 import { useWorkspaceActions } from "../hooks/useWorkspaceActions";
 import { useWorkspaceShortcuts } from "../hooks/useWorkspaceShortcuts";
@@ -18,8 +19,26 @@ import { PromptSuggestions } from "./PromptSuggestions";
 import { QuickActions } from "./QuickActions";
 import { StatusBar } from "./StatusBar";
 import { StudySessionCard } from "./StudySessionCard";
+import { SourceDocumentPanel } from "./SourceDocumentPanel";
 import { WorkspaceHeader } from "./WorkspaceHeader";
 import { WorkspaceMobileNav, WorkspaceNavigation } from "./WorkspaceNavigation";
+
+const ExamPrepView = lazy(() => import("../../exam/ExamPrepView").then((module) => ({ default: module.ExamPrepView })));
+const NotebookView = lazy(() => import("../../notebook/NotebookView").then((module) => ({ default: module.NotebookView })));
+const PracticeView = lazy(() => import("../../practice").then((module) => ({ default: module.PracticeView })));
+const SemanticSearchView = lazy(() =>
+  import("../../semantic/SemanticSearchView").then((module) => ({ default: module.SemanticSearchView })),
+);
+const SettingsView = lazy(() => import("../../settings/SettingsView").then((module) => ({ default: module.SettingsView })));
+const SyncCenterView = lazy(() => import("../../sync/SyncCenterView").then((module) => ({ default: module.SyncCenterView })));
+
+function PanelFallback({ label }: { label: string }) {
+  return (
+    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground" role="status">
+      Loading {label}…
+    </div>
+  );
+}
 
 export function Workspace() {
   const panel = useUiStore((state) => state.panel);
@@ -113,7 +132,9 @@ export function Workspace() {
           }}
         />
         <div className="flex-1 overflow-y-auto p-[var(--panel-px)]">
-          <SettingsView />
+          <Suspense fallback={<PanelFallback label="settings" />}>
+            <SettingsView />
+          </Suspense>
         </div>
         <StatusBar />
         <WorkspaceMobileNav
@@ -137,11 +158,145 @@ export function Workspace() {
           }}
         />
         <div className="flex-1 overflow-hidden">
-          <PracticeView
-            onExport={(tool, format) => {
-              toast({ title: `Exporting ${tool} as ${format}`, variant: "default" });
-            }}
-          />
+          <Suspense fallback={<PanelFallback label="practice tools" />}>
+            <PracticeView
+              onExport={(tool, format) => {
+                toast({ title: `Exporting ${tool} as ${format}`, variant: "default" });
+              }}
+            />
+          </Suspense>
+        </div>
+        <StatusBar />
+        <WorkspaceMobileNav
+          activePanel={panel}
+          onSelect={(next) => {
+            useUiStore.getState().setPanel(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (panel === "pdf" || panel === "ocr" || panel === "video") {
+    const sourceKind = panel === "pdf" ? "pdf" : panel === "video" ? "youtube" : "image";
+    return (
+      <div className="flex h-[calc(100vh-4.5rem)] flex-col overflow-hidden">
+        <WorkspaceHeader
+          source={source}
+          session={activeSession}
+          onToggleNav={() => {
+            useUiStore.getState().toggleSidebar();
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <SourceDocumentPanel kind={sourceKind} sourceId={source?.id} />
+        </div>
+        <StatusBar />
+        <WorkspaceMobileNav
+          activePanel={panel}
+          onSelect={(next) => {
+            useUiStore.getState().setPanel(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (panel === "search") {
+    return (
+      <div className="flex h-[calc(100vh-4.5rem)] flex-col overflow-hidden">
+        <WorkspaceHeader
+          source={source}
+          session={activeSession}
+          onToggleNav={() => {
+            useUiStore.getState().toggleSidebar();
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Suspense fallback={<PanelFallback label="semantic search" />}>
+            <SemanticSearchView source={source} />
+          </Suspense>
+        </div>
+        <StatusBar />
+        <WorkspaceMobileNav
+          activePanel={panel}
+          onSelect={(next) => {
+            useUiStore.getState().setPanel(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (panel === "notebook" || panel === "editor" || panel === "graph") {
+    const mode: NotebookPanelMode = panel === "editor" || panel === "graph" ? panel : "notebook";
+    return (
+      <div className="flex h-[calc(100vh-4.5rem)] flex-col overflow-hidden">
+        <WorkspaceHeader
+          source={source}
+          session={activeSession}
+          onToggleNav={() => {
+            useUiStore.getState().toggleSidebar();
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Suspense fallback={<PanelFallback label="notebook" />}>
+            <NotebookView initialMode={mode} sourceId={source?.id} sourceTitle={source?.title} />
+          </Suspense>
+        </div>
+        <StatusBar />
+        <WorkspaceMobileNav
+          activePanel={panel}
+          onSelect={(next) => {
+            useUiStore.getState().setPanel(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (panel === "exam" || panel === "analytics" || panel === "revision" || panel === "progress" || panel === "history" || panel === "recommendations") {
+    const mode: ExamPanelMode = panel;
+    return (
+      <div className="flex h-[calc(100vh-4.5rem)] flex-col overflow-hidden">
+        <WorkspaceHeader
+          source={source}
+          session={activeSession}
+          onToggleNav={() => {
+            useUiStore.getState().toggleSidebar();
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Suspense fallback={<PanelFallback label="exam preparation" />}>
+            <ExamPrepView initialMode={mode} sourceId={source?.id} sourceTitle={source?.title} />
+          </Suspense>
+        </div>
+        <StatusBar />
+        <WorkspaceMobileNav
+          activePanel={panel}
+          onSelect={(next) => {
+            useUiStore.getState().setPanel(next);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (panel === "sync" || panel === "collaboration" || panel === "activity" || panel === "versions" || panel === "conflicts") {
+    const mode: SyncPanelMode = panel;
+    return (
+      <div className="flex h-[calc(100vh-4.5rem)] flex-col overflow-hidden">
+        <WorkspaceHeader
+          source={source}
+          session={activeSession}
+          onToggleNav={() => {
+            useUiStore.getState().toggleSidebar();
+          }}
+        />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <Suspense fallback={<PanelFallback label="sync center" />}>
+            <SyncCenterView initialMode={mode} />
+          </Suspense>
         </div>
         <StatusBar />
         <WorkspaceMobileNav

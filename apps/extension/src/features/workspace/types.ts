@@ -31,7 +31,7 @@ export interface StudySession {
 }
 
 export type WorkspaceMode = "home" | "chat";
-export type WorkspacePanel = "study" | "library" | "practice" | "settings";
+export type WorkspacePanel = "study" | "pdf" | "ocr" | "video" | "notebook" | "editor" | "graph" | "search" | "practice" | "exam" | "analytics" | "revision" | "progress" | "history" | "recommendations" | "sync" | "collaboration" | "activity" | "versions" | "conflicts" | "library" | "settings";
 
 export interface QuickActionItem {
   id: StudyAction;

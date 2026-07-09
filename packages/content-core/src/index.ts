@@ -7,12 +7,30 @@ export {
 } from "./cleaners";
 export {
   extractFromOcrRegions,
+  extractFromImageOcr,
+  extractFromPdfSelection,
   extractFromPdfPages,
+  extractFromYoutubePageData,
   extractFromYoutubeTranscript,
   isOcrPipelineReady,
   isPdfPipelineReady,
   isYoutubePipelineReady,
 } from "./adapters/futurePipelines";
+export {
+  extractOcrImage,
+  extractPdfDocument,
+  extractYoutubeVideo,
+  sourceSnapshotsFromPdfExtraction,
+  type OcrImageInput,
+  type PdfBookmarkInput as PdfDocumentBookmarkInput,
+  type PdfDocumentExtraction,
+  type PdfDocumentInput,
+  type PdfOutlineItem as PdfDocumentOutlineItem,
+  type YoutubeChapterInput as YoutubeVideoChapterInput,
+  type YoutubeTimestampIndexItem,
+  type YoutubeVideoExtraction,
+  type YoutubeVideoInput,
+} from "./adapters/multimodalSources";
 export { chunkByHeadings, chunkSource, validateCitationIds } from "./chunking/chunkSource";
 export { resolveExtractor, SITE_EXTRACTORS, type Extractor } from "./extractors/registry";
 export { generateBlockCitations, generateChunkCitations } from "./metadata/citations";
@@ -33,12 +51,19 @@ export type {
   ExtractedLink,
   NormalizedDocument,
   OcrRegionInput,
+  PdfBookmarkInput,
+  PdfImageInput,
+  PdfLinkInput,
   PdfPageInput,
+  PdfTableInput,
   RawBlock,
   ReadabilityMetrics,
   SiteFamily,
   SourceChunk,
+  YoutubeChapterInput,
   YoutubeSegmentInput,
+  YoutubeTrackInput,
+  ImageExtractionInput,
 } from "./types";
 export { computeContentHash } from "./utils/hash";
 export { countWords, estimateReadingTimeMinutes, estimateTokens } from "./utils/tokens";

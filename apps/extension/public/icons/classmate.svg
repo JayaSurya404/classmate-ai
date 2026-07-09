@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ClassMate AI">
+  <defs>
+    <linearGradient id="g" x1="18" x2="110" y1="18" y2="110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="0.52" stop-color="#06B6D4"/>
+      <stop offset="1" stop-color="#22C55E"/>
+    </linearGradient>
+    <filter id="s" width="140%" height="140%" x="-20%" y="-20%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="112" height="112" x="8" y="8" rx="28" fill="#0F172A" filter="url(#s)"/>
+  <path fill="url(#g)" d="M33 35c0-5 4-9 9-9h44c5 0 9 4 9 9v58c0 5-4 9-9 9H42c-5 0-9-4-9-9V35Z"/>
+  <path fill="#E0F2FE" d="M45 41h38v8H45zM45 57h38v8H45zM45 73h24v8H45z" opacity="0.92"/>
+  <circle cx="86" cy="84" r="15" fill="#0F172A"/>
+  <path fill="#A7F3D0" d="M86 72l3 8 8 3-8 3-3 8-3-8-8-3 8-3 3-8Z"/>
+</svg>

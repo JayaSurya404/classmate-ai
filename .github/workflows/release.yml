@@ -1,0 +1,34 @@
+name: Release Candidate
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-candidate-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.0.0, run_install: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20.19.0, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: classmate-ai-release-candidate
+          path: |
+            apps/extension/dist
+            apps/extension/store-assets
+            docs/CHROME_WEB_STORE.md
+            docs/PRIVACY_POLICY.md
+            docs/TERMS_OF_USE.md
+          if-no-files-found: error

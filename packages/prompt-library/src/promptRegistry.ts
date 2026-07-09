@@ -24,6 +24,8 @@ export const promptRegistry: Readonly<Record<StudyAction, PromptTemplate>> = {
   lab_record: template("lab.record", "lab_record", "Return Aim, Requirements, Theory, Algorithm, Flow, Procedure, Observations, Result, Precautions, and Viva. Never fabricate observations or results."),
   viva: template("practice.viva", "viva", "Create progressive oral questions with concise answers, probes, key concepts, and citations."),
   chat: template("chat.grounded", "chat", "Answer the current question from the supplied evidence, identify uncertainty, and suggest non-repetitive study follow-ups."),
+  smart_note: template("notes.smart_note", "smart_note", "Create a cited study note in Markdown with headings, key concepts, definitions, examples, revision prompts, backlinks candidates, and source citations. Preserve uncertainty and do not invent sources."),
+  exam: template("exam.generator", "exam", "Create an exam-preparation artifact with varied question types, marks, answers, scoring guidance, weak-topic analysis, coverage notes, and adaptive revision recommendations grounded in the supplied source."),
 };
 
 function template(id: string, action: StudyAction, instruction: string): PromptTemplate {

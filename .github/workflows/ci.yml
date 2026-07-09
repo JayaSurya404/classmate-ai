@@ -3,6 +3,9 @@ on:
   pull_request:
   push:
     branches: [main]
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -12,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with: { version: 9.0.0 }
+        with: { version: 9.0.0, run_install: false }
       - uses: actions/setup-node@v4
         with: { node-version: 20.19.0, cache: pnpm }
       - run: pnpm install --frozen-lockfile
@@ -21,3 +24,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: classmate-extension-dist
+          path: apps/extension/dist
+          if-no-files-found: error

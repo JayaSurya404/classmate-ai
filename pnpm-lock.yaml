@@ -53,6 +53,9 @@ importers:
       '@classmate/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@classmate/learning-tools':
+        specifier: workspace:*
+        version: link:../../packages/learning-tools
       '@classmate/prompt-library':
         specifier: workspace:*
         version: link:../../packages/prompt-library
@@ -224,8 +227,8 @@ importers:
         specifier: workspace:*
         version: link:../contracts
       zod:
-        specifier: ^3.24.1
-        version: 3.25.76
+        specifier: ^4.1.13
+        version: 4.4.3
     devDependencies:
       typescript:
         specifier: ^5.9.3
@@ -2522,9 +2525,6 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
-
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
@@ -4830,8 +4830,6 @@ snapshots:
   zod-validation-error@4.0.2(zod@4.4.3):
     dependencies:
       zod: 4.4.3
-
-  zod@3.25.76: {}
 
   zod@4.4.3: {}
 

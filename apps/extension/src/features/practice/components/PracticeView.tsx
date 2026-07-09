@@ -8,6 +8,7 @@ import { MemoryToolsView } from "./MemoryToolsView";
 import { MindMapView } from "./MindMapView";
 import { StudyPlanView } from "./StudyPlanView";
 import type { PracticeTool } from "../types";
+import { recordEntityChange } from "../../sync/syncIntegration";
 
 interface PracticeViewProps {
   onExport: (tool: PracticeTool, format: "markdown" | "json" | "csv") => void;
@@ -15,6 +16,10 @@ interface PracticeViewProps {
 
 export function PracticeView({ onExport }: PracticeViewProps) {
   const [activeTool, setActiveTool] = useState<PracticeTool>("flashcards");
+  const flashcardDeckId = "10000000-0000-4000-8000-000000000013";
+  const quizId = "20000000-0000-4000-8000-000000000013";
+  const mindMapId = "30000000-0000-4000-8000-000000000013";
+  const studyPlanId = "40000000-0000-4000-8000-000000000013";
 
   const tools = [
     { id: "flashcards" as PracticeTool, label: "Flashcards", icon: BookOpen },
@@ -62,13 +67,15 @@ export function PracticeView({ onExport }: PracticeViewProps) {
           <FlashcardsView
             deck={{
               schemaVersion: 1,
-              id: "demo",
+              id: flashcardDeckId,
               title: "Sample Flashcards",
               cards: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             }}
-            onUpdateDeck={() => {}}
+            onUpdateDeck={(deck) => {
+              void recordEntityChange({ entityType: "flashcard_deck", entityId: deck.id, after: { title: deck.title, cards: deck.cards.length }, operation: "update", label: deck.title });
+            }}
             onExport={handleExport}
           />
         )}
@@ -76,14 +83,16 @@ export function PracticeView({ onExport }: PracticeViewProps) {
           <QuizView
             quiz={{
               schemaVersion: 1,
-              id: "demo",
+              id: quizId,
               title: "Sample Quiz",
               questions: [],
               attempts: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             }}
-            onUpdateQuiz={() => {}}
+            onUpdateQuiz={(quiz) => {
+              void recordEntityChange({ entityType: "quiz", entityId: quiz.id, after: { title: quiz.title, questions: quiz.questions.length, attempts: quiz.attempts.length }, operation: "update", label: quiz.title });
+            }}
             onExport={handleExport}
           />
         )}
@@ -94,13 +103,15 @@ export function PracticeView({ onExport }: PracticeViewProps) {
           <MindMapView
             mindMap={{
               schemaVersion: 1,
-              id: "demo",
+              id: mindMapId,
               title: "Sample Mind Map",
               nodes: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             }}
-            onUpdateMindMap={() => {}}
+            onUpdateMindMap={(mindMap) => {
+              void recordEntityChange({ entityType: "knowledge_graph", entityId: mindMap.id, after: { title: mindMap.title, nodes: mindMap.nodes.length }, operation: "update", label: mindMap.title });
+            }}
             onExport={handleExport}
           />
         )}
@@ -108,14 +119,16 @@ export function PracticeView({ onExport }: PracticeViewProps) {
           <StudyPlanView
             studyPlan={{
               schemaVersion: 1,
-              id: "demo",
+              id: studyPlanId,
               title: "Sample Study Plan",
               planType: "30_min",
               items: [],
               totalDuration: 0,
               createdAt: new Date().toISOString(),
             }}
-            onUpdateStudyPlan={() => {}}
+            onUpdateStudyPlan={(studyPlan) => {
+              void recordEntityChange({ entityType: "study_plan", entityId: studyPlan.id, after: { title: studyPlan.title, items: studyPlan.items.length, totalDuration: studyPlan.totalDuration }, operation: "update", label: studyPlan.title });
+            }}
             onExport={handleExport}
           />
         )}

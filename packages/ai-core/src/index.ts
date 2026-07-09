@@ -23,6 +23,18 @@ export {
   type SessionTurn,
   type TokenForecast,
 } from "./intelligence";
+export {
+  LocalEmbeddingService,
+  RetrievalCache,
+  routeOfflineAi,
+  SemanticRetrievalService,
+  VectorIndex,
+  type LocalEmbeddingOptions,
+  type OfflineRoute,
+  type OfflineRouteInput,
+  type RagContext,
+  type SemanticQuery,
+} from "./semantic";
 
 export interface ProviderCapabilities { textGeneration: true; streaming: boolean; structuredOutput: boolean; largeContext: boolean; local: boolean; }
 export interface ProviderModel { id: string; displayName: string; providerId: ProviderId; isFree: boolean; contextTokens: number; capabilities: ProviderCapabilities; }

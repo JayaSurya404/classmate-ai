@@ -139,6 +139,9 @@ export class QuizService {
         one_word: 0,
         short_answer: 0,
         long_answer: 0,
+        essay: 0,
+        assertion_reason: 0,
+        case_study: 0,
       } as Record<QuestionType, number>,
       byDifficulty: { easy: 0, medium: 0, hard: 0 } as Record<"easy" | "medium" | "hard", number>,
       totalAttempts: this.quiz.attempts.length,
@@ -205,7 +208,7 @@ export class QuizService {
     let currentQuestion: Partial<QuizQuestion> | null = null;
 
     for (const line of lines) {
-      const typeMatch = line.match(/^###\s*(multiple_choice|true_false|fill_blank|matching|one_word|short_answer|long_answer)/i);
+      const typeMatch = line.match(/^###\s*(multiple_choice|true_false|fill_blank|matching|one_word|short_answer|long_answer|essay|assertion_reason|case_study)/i);
       if (typeMatch) {
         if (currentQuestion && currentQuestion.prompt && currentQuestion.correctAnswer) {
           questions.push(QuizService.createQuestionFromPartial(currentQuestion));

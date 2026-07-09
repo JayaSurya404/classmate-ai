@@ -1,11 +1,26 @@
 import { cn } from "@classmate/ui";
-import { BookOpen, GraduationCap, Library, Settings } from "lucide-react";
+import { Activity, AlertTriangle, BarChart3, BookOpen, CalendarDays, Cloud, FileText, GitCompare, GraduationCap, History, Image, Library, Network, NotebookPen, Search, Settings, Share2, Video } from "lucide-react";
 import type { WorkspacePanel } from "../types";
 
 const NAV_ITEMS: readonly { id: WorkspacePanel; label: string; icon: typeof GraduationCap }[] = [
   { id: "study", label: "Study", icon: GraduationCap },
-  { id: "library", label: "Library", icon: Library },
+  { id: "pdf", label: "PDF", icon: FileText },
+  { id: "ocr", label: "OCR", icon: Image },
+  { id: "video", label: "Video", icon: Video },
+  { id: "notebook", label: "Notebook", icon: NotebookPen },
+  { id: "graph", label: "Graph", icon: Network },
+  { id: "search", label: "Search", icon: Search },
   { id: "practice", label: "Practice", icon: BookOpen },
+  { id: "exam", label: "Exam", icon: FileText },
+  { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "revision", label: "Revision", icon: CalendarDays },
+  { id: "history", label: "History", icon: History },
+  { id: "sync", label: "Sync", icon: Cloud },
+  { id: "collaboration", label: "Share", icon: Share2 },
+  { id: "activity", label: "Activity", icon: Activity },
+  { id: "versions", label: "Versions", icon: GitCompare },
+  { id: "conflicts", label: "Conflicts", icon: AlertTriangle },
+  { id: "library", label: "Library", icon: Library },
   { id: "settings", label: "Settings", icon: Settings },
 ] as const;
 

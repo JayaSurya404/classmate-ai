@@ -44,7 +44,7 @@ export class FlashcardsService {
   static updateCard(deck: FlashcardDeck, cardId: string, updates: Partial<Flashcard>): FlashcardDeck {
     return {
       ...deck,
-      cards: deck.cards.map((card) =>
+      cards: deck.cards.map((card: Flashcard) =>
         card.id === cardId ? { ...card, ...updates } : card
       ),
       updatedAt: new Date().toISOString(),
@@ -54,13 +54,13 @@ export class FlashcardsService {
   static deleteCard(deck: FlashcardDeck, cardId: string): FlashcardDeck {
     return {
       ...deck,
-      cards: deck.cards.filter((card) => card.id !== cardId),
+      cards: deck.cards.filter((card: Flashcard) => card.id !== cardId),
       updatedAt: new Date().toISOString(),
     };
   }
 
   static toggleFavorite(deck: FlashcardDeck, cardId: string): FlashcardDeck {
-    const card = deck.cards.find((c) => c.id === cardId);
+    const card = deck.cards.find((c: Flashcard) => c.id === cardId);
     if (!card) return deck;
     return FlashcardsService.updateCard(deck, cardId, {
       isFavorite: !card.isFavorite,
@@ -68,7 +68,7 @@ export class FlashcardsService {
   }
 
   static recordReview(deck: FlashcardDeck, cardId: string): FlashcardDeck {
-    const card = deck.cards.find((c) => c.id === cardId);
+    const card = deck.cards.find((c: Flashcard) => c.id === cardId);
     if (!card) return deck;
     return FlashcardsService.updateCard(deck, cardId, {
       reviewCount: card.reviewCount + 1,
@@ -99,7 +99,7 @@ export class FlashcardsService {
   }
 
   getCardById(cardId: string): Flashcard | undefined {
-    return this.deck.cards.find((card) => card.id === cardId);
+    return this.deck.cards.find((card: Flashcard) => card.id === cardId);
   }
 
   getCardsByTag(tag: string): Flashcard[] {
@@ -128,8 +128,8 @@ export class FlashcardsService {
     };
 
     this.deck.cards.forEach((card: Flashcard) => {
-      stats.byType[card.type]++;
-      stats.byDifficulty[card.difficulty]++;
+      stats.byType[card.type] = (stats.byType[card.type] ?? 0) + 1;
+      stats.byDifficulty[card.difficulty] = (stats.byDifficulty[card.difficulty] ?? 0) + 1;
       if (card.isFavorite) stats.favorites++;
       if (card.reviewCount > 0) stats.reviewed++;
     });
@@ -206,7 +206,7 @@ export class FlashcardsService {
   static exportToMarkdown(deck: FlashcardDeck): string {
     const lines: string[] = [`# ${deck.title}`, ``, `Total cards: ${deck.cards.length}`, ``];
 
-    deck.cards.forEach((card) => {
+    deck.cards.forEach((card: Flashcard) => {
       lines.push(`### ${card.type}`);
       lines.push(`Front: ${card.front}`);
       lines.push(`Back: ${card.back}`);
@@ -229,7 +229,7 @@ export class FlashcardsService {
 
   static exportToCsv(deck: FlashcardDeck): string {
     const headers = ["Type", "Front", "Back", "Difficulty", "Tags", "Favorite"];
-    const rows: Array<Array<string | number>> = deck.cards.map((card) => [
+    const rows: Array<Array<string | number>> = deck.cards.map((card: Flashcard) => [
       card.type,
       `"${card.front.replace(/"/g, '""')}"`,
       `"${card.back.replace(/"/g, '""')}"`,
