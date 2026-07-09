@@ -5,8 +5,27 @@ const HEADING_TAGS = new Set(["H1", "H2", "H3", "H4", "H5", "H6"]);
 const MAX_BLOCK_LENGTH = 100_000;
 const ELEMENT_NODE = 1;
 const TEXT_NODE = 3;
+const MAX_REJECTION_SAMPLES = 80;
 
-export function parseBlocksFromElement(root: Element): RawBlock[] {
+export interface BlockParseDiagnostics {
+  candidateElements: number;
+  acceptedBlocks: number;
+  rejectedBlocks: number;
+  rejectionReasons: Record<string, number>;
+  rejectionSamples: readonly string[];
+}
+
+export function createBlockParseDiagnostics(): BlockParseDiagnostics {
+  return {
+    candidateElements: 0,
+    acceptedBlocks: 0,
+    rejectedBlocks: 0,
+    rejectionReasons: {},
+    rejectionSamples: [],
+  };
+}
+
+export function parseBlocksFromElement(root: Element, diagnostics?: BlockParseDiagnostics): RawBlock[] {
   const blocks: RawBlock[] = [];
   const headingStack: string[] = [];
 
@@ -24,13 +43,18 @@ export function parseBlocksFromElement(root: Element): RawBlock[] {
     const tag = element.tagName.toUpperCase();
 
     if (tag === "SCRIPT" || tag === "STYLE" || tag === "NOSCRIPT") {
+      recordRejection(diagnostics, element, "non-readable element");
       return;
     }
 
     if (HEADING_TAGS.has(tag)) {
+      recordCandidate(diagnostics);
       const level = Number(tag.slice(1));
       const text = collapseWhitespace(element.textContent ?? "");
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty heading");
+        return;
+      }
       headingStack.splice(level - 1);
       headingStack[level - 1] = text;
       blocks.push({
@@ -38,64 +62,95 @@ export function parseBlocksFromElement(root: Element): RawBlock[] {
         text,
         headingPath: headingStack.filter(Boolean),
       });
+      recordAccepted(diagnostics);
       return;
     }
 
     if (tag === "PRE" || (tag === "CODE" && element.closest("pre") === null && looksLikeCodeBlock(element))) {
+      recordCandidate(diagnostics);
       const language = extractCodeLanguage(element);
       const text = redactSecrets(normalizeVisibleText(element.textContent ?? ""));
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty code block");
+        return;
+      }
       blocks.push({
         type: "code",
         text: text.slice(0, MAX_BLOCK_LENGTH),
         headingPath: [...headingStack],
         language,
       });
+      recordAccepted(diagnostics);
       return;
     }
 
     if (tag === "TABLE") {
+      recordCandidate(diagnostics);
       const text = redactSecrets(formatTable(element));
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty table");
+        return;
+      }
       blocks.push({
         type: "table",
         text: text.slice(0, MAX_BLOCK_LENGTH),
         headingPath: [...headingStack],
       });
+      recordAccepted(diagnostics);
       return;
     }
 
     if (tag === "UL" || tag === "OL") {
+      recordCandidate(diagnostics);
       const text = redactSecrets(formatList(element));
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty list");
+        return;
+      }
       blocks.push({
         type: "list",
         text: text.slice(0, MAX_BLOCK_LENGTH),
         headingPath: [...headingStack],
       });
+      recordAccepted(diagnostics);
       return;
     }
 
     if (tag === "BLOCKQUOTE") {
+      recordCandidate(diagnostics);
       const text = redactSecrets(collapseWhitespace(element.textContent ?? ""));
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty quote");
+        return;
+      }
       blocks.push({
         type: "quote",
         text: text.slice(0, MAX_BLOCK_LENGTH),
         headingPath: [...headingStack],
       });
+      recordAccepted(diagnostics);
       return;
     }
 
     if (isParagraphLike(tag, element)) {
+      recordCandidate(diagnostics);
       const text = redactSecrets(collapseWhitespace(element.textContent ?? ""));
-      if (!text) return;
+      if (!text) {
+        recordRejection(diagnostics, element, "empty paragraph");
+        return;
+      }
       blocks.push({
         type: "paragraph",
         text: text.slice(0, MAX_BLOCK_LENGTH),
         headingPath: [...headingStack],
       });
+      recordAccepted(diagnostics);
       return;
+    }
+
+    if (mayContainReadableContent(tag, element)) {
+      recordCandidate(diagnostics);
+      recordRejection(diagnostics, element, `container traversed: ${tag.toLowerCase()}`);
     }
 
     element.childNodes.forEach(walk);
@@ -110,6 +165,11 @@ function isParagraphLike(tag: string, node: Element): boolean {
   if (tag === "DIV" && node.childElementCount === 0) return Boolean(node.textContent?.trim());
   if (tag === "SECTION" && node.childElementCount <= 1) return Boolean(node.textContent?.trim());
   return false;
+}
+
+function mayContainReadableContent(tag: string, node: Element): boolean {
+  if (!["ARTICLE", "MAIN", "SECTION", "DIV", "TD", "TH", "LI"].includes(tag)) return false;
+  return Boolean(node.textContent?.trim());
 }
 
 function looksLikeCodeBlock(node: Element): boolean {
@@ -163,6 +223,24 @@ function mergeAdjacentParagraphs(blocks: RawBlock[]): RawBlock[] {
     }
   }
   return merged;
+}
+
+function recordCandidate(diagnostics?: BlockParseDiagnostics): void {
+  if (diagnostics) diagnostics.candidateElements += 1;
+}
+
+function recordAccepted(diagnostics?: BlockParseDiagnostics): void {
+  if (diagnostics) diagnostics.acceptedBlocks += 1;
+}
+
+function recordRejection(diagnostics: BlockParseDiagnostics | undefined, element: Element, reason: string): void {
+  if (!diagnostics) return;
+  diagnostics.rejectedBlocks += 1;
+  diagnostics.rejectionReasons[reason] = (diagnostics.rejectionReasons[reason] ?? 0) + 1;
+  const samples = diagnostics.rejectionSamples as string[];
+  if (samples.length >= MAX_REJECTION_SAMPLES) return;
+  const text = collapseWhitespace(element.textContent ?? "").slice(0, 140);
+  samples.push(`${element.tagName.toLowerCase()}: ${reason}${text ? ` — ${text}` : ""}`);
 }
 
 export function blocksFromPlainText(text: string, headingPath: readonly string[] = []): RawBlock[] {

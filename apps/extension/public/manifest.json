@@ -22,6 +22,12 @@
       "description": "Capture selected text"
     }
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*.js"],
+      "matches": ["https://*/*", "http://*/*"]
+    }
+  ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'"
   },

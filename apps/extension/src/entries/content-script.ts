@@ -1,4 +1,4 @@
-import { ExtensionMessageSchema } from "@classmate/contracts";
+import { ExtensionMessageSchema, SourceSnapshotSchema } from "@classmate/contracts";
 import { extractFromBrowserContext } from "@classmate/content-core";
 
 chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
@@ -10,8 +10,14 @@ chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
     .then((source) => {
       sendResponse({ ok: true, source });
     })
-    .catch(() => {
-      sendResponse({ ok: false, code: "CAPTURE_FAILED" });
+    .catch((error: unknown) => {
+      sendResponse({
+        ok: false,
+        code: "CAPTURE_FAILED",
+        stage: "response",
+        message: errorMessage(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
     });
 
   return true;
@@ -35,5 +41,14 @@ async function capture(scope: "selection" | "page"): Promise<unknown> {
     throw new Error("No visible text found");
   }
 
-  return result.snapshot;
+  const parsed = SourceSnapshotSchema.safeParse(result.snapshot);
+  if (!parsed.success) {
+    throw new Error(`SourceSnapshot validation failed: ${parsed.error.issues.map((issue) => issue.message).join("; ")}`);
+  }
+
+  return parsed.data;
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : typeof error === "string" ? error : "Unknown content capture error.";
 }

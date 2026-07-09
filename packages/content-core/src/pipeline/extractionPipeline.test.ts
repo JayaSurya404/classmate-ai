@@ -35,6 +35,40 @@ describe("extractContent", () => {
     expect(result.metadata.readingTimeMinutes).toBeGreaterThan(0);
   });
 
+  it("chooses the populated Wikipedia article root when an earlier shell is empty", async () => {
+    const result = await extractContent({
+      url: "https://en.wikipedia.org/wiki/Operating_system",
+      title: "Operating system - Wikipedia",
+      html: `<!doctype html>
+        <html lang="en">
+          <body>
+            <main id="content">
+              <div id="mw-content-text"></div>
+              <article id="bodyContent">
+                <div class="mw-parser-output">
+                  <h1>Operating system</h1>
+                  <section data-mw-section-id="0">
+                    <p>An operating system manages computer hardware and software resources.</p>
+                    <p>It provides common services for computer programs.</p>
+                  </section>
+                  <section data-mw-section-id="1">
+                    <h2>Kernel</h2>
+                    <p>The kernel controls process scheduling and memory management.</p>
+                  </section>
+                </div>
+              </article>
+            </main>
+          </body>
+        </html>`,
+      language: "en",
+      scope: "page",
+    });
+
+    expect(result.snapshot.blocks.length).toBeGreaterThan(0);
+    expect(result.snapshot.blocks.some((block) => block.text.includes("operating system manages"))).toBe(true);
+    expect(result.snapshot.blocks.some((block) => block.headingPath.includes("Kernel"))).toBe(true);
+  });
+
   it("extracts MDN documentation with code blocks", async () => {
     const result = await extractContent({
       url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array",

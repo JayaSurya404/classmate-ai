@@ -19,10 +19,10 @@ export const GENERIC_EXTRACTOR: Extractor = {
 };
 
 export const SITE_EXTRACTORS: readonly Extractor[] = [
-  { id: "wikipedia", canHandle: (f) => f === "wikipedia", extractRootSelector: () => "#mw-content-text, .mw-parser-output" },
-  { id: "mdn", canHandle: (f) => f === "mdn", extractRootSelector: () => "main, article, .main-page-content" },
-  { id: "w3schools", canHandle: (f) => f === "w3schools", extractRootSelector: () => "#main, .w3-main" },
-  { id: "geeksforgeeks", canHandle: (f) => f === "geeksforgeeks", extractRootSelector: () => "article, .text, .entry-content" },
+  { id: "wikipedia", canHandle: (f) => f === "wikipedia", extractRootSelector: () => ".mw-parser-output, #mw-content-text, #bodyContent, main, article" },
+  { id: "mdn", canHandle: (f) => f === "mdn", extractRootSelector: () => "main, article, .main-page-content, .section-content" },
+  { id: "w3schools", canHandle: (f) => f === "w3schools", extractRootSelector: () => "#main, .w3-main, .w3-container, main, article" },
+  { id: "geeksforgeeks", canHandle: (f) => f === "geeksforgeeks", extractRootSelector: () => "article, .text, .entry-content, .article--container, main" },
   { id: "github", canHandle: (f) => f === "github", extractRootSelector: () => "article.markdown-body, .repository-content, [data-testid='readme-content']" },
   { id: "stackoverflow", canHandle: (f) => f === "stackoverflow", extractRootSelector: () => "#question, .question, .answercell, .s-prose" },
   { id: "medium", canHandle: (f) => f === "medium", extractRootSelector: () => "article, main" },
